@@ -8,7 +8,7 @@ const dynamicController = async (req, res) => {
             switch (table_name) {
                 case "match_therapist_questions":
                     const { id } = req.body;
-                    const query = `SELECT * FROM match_therapist_questions WHERE id = $1`;
+                    const query = `SELECT question, created_at, created_by, updated_at, updated_by, id FROM match_therapist_questions WHERE id = $1`;
                     pool.query(query, [id], (err, result) => {
                         if (err) {
                             res.status(400).send(err);
@@ -30,26 +30,28 @@ const dynamicController = async (req, res) => {
                         if (err) {
                             res.status(500).send(`Error inserting record: ${err}`);
                         } else {
-                            res.status(201).send({ message: "Record inserted successfully", result });
+                            res.status(201).send({ message: "Record inserted successfully", question: result.rows[0]});
                         }
                     });
                     break;
-                case "match_therapist_questions_option":
-                    const { question_id, options } = req.body;
-                    // Loop through each option and insert it into the database
-                    options.forEach(optionText => {
-                        const insertQuery = `INSERT INTO match_therapist_questions_option(question_id, option_text) VALUES($1, $2)`;
-                        pool.query(insertQuery, [question_id, optionText], (err, result) => {
-                            if (err) {
-                                console.error(`Error inserting record: ${err}`);
-                            } else {
-                                console.log("Option added successfully");
-                            }
-                        });
-                    });
-                    // Send a response after all options have been processed
-                    res.status(201).send({ message: "All options added successfully" });
+                    
+                    case "match_therapist_questions_options":
+                      
+                    const { question_id, option, is_correct, created_by, updated_by } = req.body;
+                     try {
+        
+                        const query = `INSERT INTO match_therapist_questions_options(question_id, option, is_correct, created_by, updated_by) VALUES($1, $2, $3, $4, $5) RETURNING *`;
+                        const values = [question_id, option, is_correct, created_by, updated_by];
+                        const result = await pool.query(query, values);
+                        res.status(201).send({ message: "Record inserted successfully", option: result.rows[0] });
+                    } catch (err) {
+                        res.status(500).send(`Error inserting record: ${err}`);
+                    }
                     break;
+                    
+                       
+
+
                 default:
                     res.status(400).send("Invalid table name");
             }
@@ -58,7 +60,7 @@ const dynamicController = async (req, res) => {
             switch (table_name) {
                 case "match_therapist_questions_option":
                     const { option_id } = req.body;
-                    const deleteQuery = `DELETE FROM match_therapist_questions_option WHERE option_id = $1`;
+                    const deleteQuery = `DELETE FROM match_therapist_questions_options WHERE option_id = $1`;
                     pool.query(deleteQuery, [option_id], (err, result) => {
                         if (err) {
                             res.status(500).send(`Error deleting record: ${err}`);
@@ -86,7 +88,7 @@ const dynamicController = async (req, res) => {
             switch (table_name) {
                 case "match_therapist_questions_option":
                     const { option_id, new_option_text } = req.body;
-                    const updateQuery = `UPDATE match_therapist_questions_option SET option_text = $1 WHERE option_id = $2`;
+                    const updateQuery = `UPDATE match_therapist_questions_options SET option_text = $1 WHERE option_id = $2`;
                     pool.query(updateQuery, [new_option_text, option_id], (err, result) => {
                         if (err) {
                             res.status(500).send(`Error updating record: ${err}`);

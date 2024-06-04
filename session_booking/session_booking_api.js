@@ -51,7 +51,7 @@ const updateSessionBooking = async (req, res) => {
     try {
         const { id, session_details_id,session_id, user_id, payment_transcation_id, booking_time } = req.body;
 
-        const query = 'UPDATE session_booking SET session_details_id=$1, user_id=$2,session_id=$3 payment_transcation_id=$4, booking_time=$5, WHERE id=$6 RETURNING *';;
+        const query = 'UPDATE session_booking SET session_details_id=$1, user_id=$2,session_id=$3, payment_transcation_id=$4, booking_time=$5  WHERE id=$6 RETURNING *';
         const values = [session_details_id,user_id,session_id, payment_transcation_id, booking_time, id];
 
         const result = await pool.query(query, values);
